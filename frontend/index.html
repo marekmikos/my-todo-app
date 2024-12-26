@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .task {
+            margin: 10px 0;
+        }
+        .task span {
+            margin-right: 10px;
+        }
+        .completed {
+            text-decoration: line-through;
+        }
+    </style>
+</head>
+<body>
+    <h1>Todo List</h1>
+    <input id="newTask" placeholder="Add a new task">
+    <button onclick="addTask()">Add Task</button>
+    <ul id="taskList"></ul>
+
+    <script>
+        // Fetch tasks from the backend API
+        async function fetchTasks() {
+            const response = await fetch('http://localhost:5000/tasks');
+            const tasks = await response.json();
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = 'task';
+                li.innerHTML = `
+                    <span class="${task.completed ? 'completed' : ''}">${task.title}</span>
+                    <button onclick="toggleTask(${task.id})">${task.completed ? 'Undo' : 'Done'}</button>
+                    <button onclick="deleteTask(${task.id})">Delete</button>
+                `;
+                taskList.appendChild(li);
+            });
+        }
+
+        // Add a new task
+        async function addTask() {
+            const newTask = document.getElementById('newTask').value;
+            if (newTask.trim() === '') {
+                alert('Task cannot be empty');
+                return;
+            }
+
+            console.log('Adding task:', newTask);  // Debug log
+
+            try {
+                const response = await fetch('http://localhost:5000/tasks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: newTask })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    console.error('Error adding task:', error);
+                    alert('Failed to add task');
+                    return;
+                }
+
+                console.log('Task added successfully');  // Debug log
+                document.getElementById('newTask').value = '';
+                fetchTasks();
+            } catch (error) {
+                console.error('Error adding task:', error);
+                alert('Failed to add task');
+            }
+        }
+
+        // Toggle task completion
+        async function toggleTask(taskId) {
+            await fetch(`http://localhost:5000/tasks/${taskId}`, { method: 'PUT' });
+            fetchTasks();
+        }
+
+        // Delete a task
+        async function deleteTask(taskId) {
+            await fetch(`http://localhost:5000/tasks/${taskId}`, { method: 'DELETE' });
+            fetchTasks();
+        }
+
+        // Fetch tasks when the page loads
+        fetchTasks();
+    </script>
+</body>
+</html>
