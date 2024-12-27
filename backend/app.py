@@ -31,6 +31,10 @@ with app.app_context():
     print("Tables in the database:", inspector.get_table_names())
 
 # Routes for CRUD operations
+@app.route('/')
+def home():
+    return "Welcome to the Todo List API!"
+
 @app.route('/tasks', methods=['GET', 'POST', 'OPTIONS'])
 def tasks():
     if request.method == 'OPTIONS':
@@ -80,3 +84,5 @@ def task(task_id):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+
+
